@@ -1,30 +1,149 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class CustomerMovement : MonoBehaviour
 {
-    private NavMeshAgent agent;
-    public Transform entranceTarget; // Set this in the inspector to the entrance position
-    public float wanderRadius = 10.0f; // Radius around the spawn point where the customer may wander
-    public float chanceToVisit = 0.05f; // 5% chance for a wandering customer to decide to visit.
+    // Fields from Customer
+    public float waitTime = 0;
+    public float maxWaitTime = 10;
+    private bool alreadyUnsatisfied = false;
 
-    private bool isWandering = false; // To check if a customer is wandering
+    // Fields from CustomerFollow
+    public Transform player;
+    private NavMeshAgent agent;
+    private bool isFollowing = false;
+    private Transform stopPosition;
+
+    // Fields from CustomerBehavior
+    public Transform entranceTarget;
+    public Transform sitPosition;
+    private bool isWaiting = false;
+    public Material normalMaterial;
+    public Material highlightMaterial;
+    private Renderer customerRenderer;
+    private bool hasArrivedAtEntrance = false;
+    private bool isServed = false;
+    
+
 
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        MoveToEntrance();
+        customerRenderer = GetComponent<Renderer>();
+        customerRenderer.material = highlightMaterial;
+        
 
-        // Decide if the customer should wander or move directly to the entrance
-        float chance = Random.Range(0f, 1f); // Generate a random number between 0 and 1
-        if (chance < 0.1f) // 10% chance
+
+    }
+
+    private void Update()
+    {
+        if (isFollowing)
         {
-            MoveToEntrance();
+            agent.SetDestination(player.position);
         }
-        else
+
+        if (!agent.pathPending && agent.remainingDistance <= 0.1f)
         {
-            StartWandering();
+            if (!hasArrivedAtEntrance && entranceTarget && agent.destination == entranceTarget.position)
+            {
+                hasArrivedAtEntrance = true;
+            }
+
+            if (!isWaiting && hasArrivedAtEntrance)
+            {
+                isWaiting = true;
+            }
+        }
+
+        // Check for unsatisfied customers
+        if (isWaiting && !isFollowing && !isServed)
+        {
+            waitTime += Time.deltaTime;
+
+            if (waitTime > maxWaitTime && !alreadyUnsatisfied)
+            {
+                GameManager.instance.CustomerBecameUnsatisfied();
+                alreadyUnsatisfied = true;
+                Debug.Log("Customer is about to become unsatisfied!");
+            }
+        }
+
+
+    }
+
+    public void ToggleFollowingStatus()
+    {
+        isFollowing = !isFollowing;
+
+        if (isFollowing)
+        {
+            waitTime = 0;
+            alreadyUnsatisfied = false;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Table"))
+        {
+            Debug.Log("Customer arrived at the table.");
+            isFollowing = false;
+            isWaiting = false;
+            waitTime = 0;
+            alreadyUnsatisfied = false;
+            isServed = true;
+            GameManager.instance.CustomerSatisfied(); // Call this method here
+            stopPosition = other.transform;
+            agent.SetDestination(stopPosition.position);
+            Debug.Log("Customer reached the table.");
+            
+        }
+
+        if (other.CompareTag("Player"))
+        {
+            HighlightCustomer();
+        }
+
+        if (other.CompareTag("Entrance"))
+        {
+            isWaiting = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            RemoveHighlight();
+        }
+    }
+
+    public void HighlightCustomer()
+    {
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        foreach (Renderer r in renderers)
+        {
+            if (r.gameObject.tag != "Eyes" && highlightMaterial)
+            {
+                r.material = highlightMaterial;
+            }
+        }
+    }
+
+    public void RemoveHighlight()
+    {
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        foreach (Renderer r in renderers)
+        {
+            if (r.gameObject.tag != "Eyes" && normalMaterial)
+            {
+                r.material = normalMaterial;
+            }
         }
     }
 
@@ -33,7 +152,6 @@ public class CustomerMovement : MonoBehaviour
         if (entranceTarget != null)
         {
             agent.SetDestination(entranceTarget.position);
-            isWandering = false; // Ensure that the wandering state is turned off.
         }
         else
         {
@@ -41,57 +159,9 @@ public class CustomerMovement : MonoBehaviour
         }
     }
 
-    void StartWandering()
+    public void SitAtTable(Transform tablePosition)
     {
-        isWandering = true;
-        StartCoroutine(Wander());
-    }
-
-    IEnumerator Wander()
-    {
-        while (isWandering)
-        {
-            Vector3 newPos = RandomNavSphere(transform.position, wanderRadius, -1);
-            agent.SetDestination(newPos);
-            yield return new WaitForSeconds(5); // Wait for 5 seconds
-
-            // Introduce the chance for the customer to decide to visit the restaurant
-            if (Random.Range(0f, 1f) < chanceToVisit)
-            {
-                MoveToEntrance();
-                isWandering = false; // This will break out of the while loop.
-            }
-        }
-    }
-
-    Vector3 RandomNavSphere(Vector3 origin, float dist, int layermask)
-    {
-        Vector3 randDirection = Random.insideUnitSphere * dist;
-        randDirection += origin;
-        NavMeshHit navHit;
-        NavMesh.SamplePosition(randDirection, out navHit, dist, layermask);
-        return navHit.position;
-    }
-
-    float waitTime = 0f;
-    const float maxWaitTime = 60f; // Time in seconds
-
-    void Update()
-    {
-        if (!isWandering && !agent.pathPending && agent.remainingDistance <= 1f)
-        {
-            // The customer reached the destination and is waiting
-            waitTime += Time.deltaTime;
-            if (waitTime > maxWaitTime)
-            {
-                LeaveRestaurant();
-            }
-        }
-    }
-
-    void LeaveRestaurant()
-    {
-        Debug.Log("I've waited too long! I'm leaving.");
-        Destroy(this.gameObject); // Destroy the customer game object
+        Debug.Log("Moving to: " + tablePosition.position);
+        agent.SetDestination(tablePosition.position);
     }
 }
