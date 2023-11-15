@@ -6,6 +6,15 @@ public class TopDownCharracter : MonoBehaviour
 {
     [SerializeField] private float speed = 10.0f;
     [SerializeField] private float rotationSpeed = 720.0f;
+    private CharacterController characterController;
+
+    private bool canMove = true; // New variable
+
+    private void Start()
+    {
+        
+        characterController = GetComponent<CharacterController>();
+    }
 
     private void Update()
     {
@@ -14,6 +23,8 @@ public class TopDownCharracter : MonoBehaviour
 
     private void MoveCharacter()
     {
+        if (!canMove) return;  // Stop moving if canMove is false
+
         float horizontalMovement = Input.GetAxis("Horizontal");
         float verticalMovement = Input.GetAxis("Vertical");
 
@@ -27,4 +38,6 @@ public class TopDownCharracter : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
         }
     }
+
+   
 }

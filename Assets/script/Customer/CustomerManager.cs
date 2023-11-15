@@ -5,8 +5,7 @@ using UnityEngine;
 public class CustomerManager : MonoBehaviour
 {
     public GameObject[] customers; // Store all customers in an array
-
-    private int currentCustomerIndex = 0;
+    public static List<GameObject> orderedFoods = new List<GameObject>();
 
     void Start()
     {
@@ -16,21 +15,41 @@ public class CustomerManager : MonoBehaviour
             customer.SetActive(false);
         }
 
-        // Start the customer sequence with the first customer after 5 seconds
-        // and then every 55 seconds activate the next customer.
-        InvokeRepeating("ActivateNextCustomer", 5f, 55f);
+        // Start the customer sequence with a random customer after 5 seconds
+        // and then every 20 seconds activate another random customer.
+        InvokeRepeating("ActivateRandomCustomer", 5f, 20f);
     }
 
-    void ActivateNextCustomer()
+    void ActivateRandomCustomer()
     {
-        if (currentCustomerIndex < customers.Length)
+        // Check if there are any inactive customers left to activate
+        if (InactiveCustomerExists())
         {
-            customers[currentCustomerIndex].SetActive(true);
-            currentCustomerIndex++;
+            int randomIndex;
+            do
+            {
+                randomIndex = Random.Range(0, customers.Length);
+            }
+            while (customers[randomIndex].activeSelf); 
+
+            customers[randomIndex].SetActive(true);
         }
         else
         {
-            CancelInvoke("ActivateNextCustomer"); // Stop the repeating invoke when all customers are activated
+            CancelInvoke("ActivateRandomCustomer"); // Stop the repeating invoke when all customers are activated
         }
+    }
+
+    // Utility method to check if there are any inactive customers
+    bool InactiveCustomerExists()
+    {
+        foreach (GameObject customer in customers)
+        {
+            if (!customer.activeSelf)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
