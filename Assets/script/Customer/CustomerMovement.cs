@@ -169,7 +169,7 @@ public class CustomerMovement : MonoBehaviour
             int randomIndex = Random.Range(0, foodsNotOrdered.Count);
             orderedFood = foodsNotOrdered[randomIndex]; // Store the prefab that represents their order
             CustomerManager.orderedFoods.Add(orderedFood); // Add this food to the list of ordered foods
-            customerOrder = orderedFood; // Ensure this is set for checking when the order is delivered
+            availableFoodPrefabs.Remove(orderedFood);
             Debug.Log(gameObject.name + " Ordered: " + orderedFood.name);
             isWaitingForOrder = true; // Customer has made an order and is waiting
             isServed = false;
