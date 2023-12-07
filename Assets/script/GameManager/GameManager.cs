@@ -11,6 +11,8 @@ public class GameManager : MonoBehaviour
     public int satisfiedCustomers = 0;
     public int requiredSatisfactionsForWin = 5;
     public TextMeshProUGUI gameOverText;
+    public TextMeshProUGUI satisfactionText;
+    public TextMeshProUGUI unsatisfactionText;
 
     // Adding a queue to manage customer wait times
     public Queue<CustomerMovement> customerQueue = new Queue<CustomerMovement>();
@@ -33,8 +35,9 @@ public class GameManager : MonoBehaviour
 
     public void CustomerSatisfied(CustomerMovement customer)
     {
-        Debug.Log("Satisfied a customer. Unsatisfied count before: " + unsatisfiedCustomers);
+        Debug.Log("Satisfied a customer. Unsatisfied count before: " + unsatisfiedCustomers );
         satisfiedCustomers++;
+        UpdateSatisfactionUI();
         if (satisfiedCustomers >= requiredSatisfactionsForWin)
         {
             GameWon();
@@ -50,15 +53,21 @@ public class GameManager : MonoBehaviour
     {
         unsatisfiedCustomers++;
         Debug.Log("Unsatisfied customer count: " + unsatisfiedCustomers);
-
+        UpdateSatisfactionUI();
         // Removing the unsatisfied customer from the queue
-        
+
 
         // Check for game over condition
         if (unsatisfiedCustomers >= maxUnsatisfiedCustomers)
         {
             GameOver();
         }
+    }
+
+    public void UpdateSatisfactionUI()
+    {
+        satisfactionText.text = "Satisfaction: " + satisfiedCustomers;
+        unsatisfactionText.text = "Unsatisfaction: " + unsatisfiedCustomers;
     }
 
     private void GameOver()

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4032260003824926862}
   - component: {fileID: 7182478112630328816}
   - component: {fileID: 4585154327888743461}
+  - component: {fileID: 784225528940727234}
   m_Layer: 0
   m_Name: Order 6
   m_TagString: FoodTray
@@ -104,6 +105,19 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1.836812, y: 0.06088575, z: 1.9166043}
   m_Center: {x: -0.041626453, y: 0.030442864, z: 0.13883889}
+--- !u!114 &784225528940727234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4181477787598170363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f20f10a541285494db806ff0f90676b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  foodId: 6
 --- !u!1001 &502159879524516371
 PrefabInstance:
   m_ObjectHideFlags: 0

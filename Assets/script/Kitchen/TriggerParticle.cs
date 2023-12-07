@@ -6,29 +6,90 @@ public class TriggerParticle : MonoBehaviour
 {
     public Animator chefAnimator;
     public ParticleSystem tableParticle;
+    public GameObject[] foodPrefabs; // Assign your food prefabs in the inspector
+    // This should be an array if you have multiple spawn locations, one for each table.
+    public Transform[] spawnLocations; // Make sure this is an array if you have multiple tables.
 
     private bool playerIsNearTable = false; // This variable checks if the player is near the table
-
+    private bool isAwaitingOrder = false;
+    private int currentOrderIndex = -1;
     private void Update()
     {
         if (playerIsNearTable && Input.GetKeyDown(KeyCode.E))
         {
-            TriggerPickUpAnimation();
-            tableParticle.Play();
-            
+            // Player has pressed 'E' to interact with the chef
+            isAwaitingOrder = true;
+            Debug.Log("Press a number key to select an order.");
+        }
+
+        if (isAwaitingOrder)
+        {
+            CheckForOrderInput();
         }
     }
-
-    public void TriggerPickUpAnimation()
+    private void CheckForOrderInput()
     {
-        chefAnimator.SetTrigger("pickUp");
-        TurnChefRight();
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            StartCookingOrder(0); // For food prefab at index 0
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            StartCookingOrder(1); // For food prefab at index 1
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            StartCookingOrder(2); // For food prefab at index 2
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            StartCookingOrder(3); // For food prefab at index 3
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha5))
+        {
+            StartCookingOrder(4); // For food prefab at index 4
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha6))
+        {
+            StartCookingOrder(5); // For food prefab at index 5
+        }
+        
+    }
+    private void StartCookingOrder(int orderIndex)
+    {
+        if (orderIndex < 0 || orderIndex >= foodPrefabs.Length)
+        {
+            Debug.LogError("Order index is out of bounds. Index: " + orderIndex);
+            return; // Exit the function to prevent the out of range error
+        }
+
+        Debug.Log("Cooking order: " + (orderIndex + 1));
+
+        if (chefAnimator != null)
+        {
+            chefAnimator.SetTrigger("pickUp"); // Confirm this trigger exists in the Animator
+        }
+
+        if (tableParticle != null)
+        {
+            tableParticle.Play(); // Start the particle effect
+        }
+
+        StartCoroutine(CookingRoutine(orderIndex));
+        isAwaitingOrder = false; // Reset the flag after starting the coroutine
     }
 
-    private void TurnChefRight()
+    public void ReceiveOrder(int orderIndex)
     {
-        // Rotate the chef 90 degrees to the right
-        chefAnimator.transform.Rotate(0, 90, 0);
+        currentOrderIndex = orderIndex; // Set the current order index to the received order.
+        Debug.Log("Order received: " + currentOrderIndex);
+    }
+
+    private IEnumerator CookingRoutine(int orderIndex)
+    {
+        chefAnimator.SetTrigger("pickUp");
+        yield return new WaitForSeconds(30); // Wait for cooking time
+        Instantiate(foodPrefabs[orderIndex], spawnLocations[0].position, Quaternion.identity);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -48,4 +109,6 @@ public class TriggerParticle : MonoBehaviour
             playerIsNearTable = false;
         }
     }
+
+
 }

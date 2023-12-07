@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
+
 public class CustomerMovement : MonoBehaviour
 {
     // Customer related fields
@@ -163,27 +164,19 @@ public class CustomerMovement : MonoBehaviour
 
     void MakeRandomOrder()
     {
-        var foodsNotOrdered = availableFoodPrefabs.Where(food => !CustomerManager.orderedFoods.Contains(food)).ToList();
-        if (foodsNotOrdered.Count > 0)
-        {
-            int randomIndex = Random.Range(0, foodsNotOrdered.Count);
-            orderedFood = foodsNotOrdered[randomIndex]; // Store the prefab that represents their order
-            CustomerManager.orderedFoods.Add(orderedFood); // Add this food to the list of ordered foods
-            availableFoodPrefabs.Remove(orderedFood);
-            Debug.Log(gameObject.name + " Ordered: " + orderedFood.name);
-            isWaitingForOrder = true; // Customer has made an order and is waiting
-            isServed = false;
-        }
-        else
-        {
-            // If there are no available food prefabs, log a warning.
-            Debug.LogWarning(gameObject.name + ": No available food prefabs to order.");
-        }
+        int randomIndex = Random.Range(0, foodPrefabs.Length);
+        orderedFood = foodPrefabs[randomIndex]; // Select a random food prefab
+        Debug.Log(gameObject.name + " Ordered: " + orderedFood.name);
+        isWaitingForOrder = true; // Customer has made an order and is waiting
+        isServed = false;
     }
 
     public bool CheckOrder(GameObject deliveredFood)
     {
-        if (deliveredFood == orderedFood) // changed from customerOrder to orderedFood
+        FoodItem deliveredItem = deliveredFood.GetComponent<FoodItem>();
+        FoodItem orderedItem = orderedFood.GetComponent<FoodItem>();
+        Debug.Log($"Delivered: '{deliveredFood}', Expected: '{orderedFood}'");
+        if (deliveredItem != null && orderedItem != null && deliveredItem.foodId == orderedItem.foodId)
         {
             Debug.Log("Delivered correct food!");
             return true;
@@ -194,12 +187,19 @@ public class CustomerMovement : MonoBehaviour
             return false;
         }
     }
+    public int OrderFood()
+    {
+        int orderIndex = Random.Range(0, foodPrefabs.Length); // This gets a random order index. 
+        orderedFood = foodPrefabs[orderIndex]; // This sets the ordered food.
+        isWaitingForOrder = true; // The customer is now waiting for this order.
+        Debug.Log(gameObject.name + " ordered: " + orderedFood.name);
+        return orderIndex; // Return the order index so that the chef knows which food to prepare.
+    }
     public void ServeOrder(GameObject food)
     {
-        Debug.Log($"ServeOrder called with food: {food.name}, isServed: {isServed}");
         if (isWaitingForOrder && !isServed)
         {
-            if (food.name == orderedFood.name)
+            if (food.name == orderedFood.name + "(Clone)") // Check if the food served is the correct food
             {
                 // Correct food
                 Destroy(customerOrder); // Destroy the customer's current order
@@ -209,10 +209,13 @@ public class CustomerMovement : MonoBehaviour
                 isServed = true;
                 GameManager.instance.CustomerSatisfied(this); // Now the customer is satisfied
                 Debug.Log("Customer served with correct order: " + customerOrder.name);
+
+                // Start a coroutine to make the customer disappear after 30 seconds
+                StartCoroutine(DisappearAfterSatisfaction(30.0f)); // 30 seconds delay
             }
             else
             {
-                // Wrong food, the customer becomes unsatisfied
+                // Wrong food, make the customer unsatisfied
                 GameManager.instance.CustomerBecameUnsatisfied(this);
                 Debug.Log("Customer served with wrong order: " + food.name);
             }
@@ -221,6 +224,19 @@ public class CustomerMovement : MonoBehaviour
         {
             Debug.Log("Customer is not waiting for an order or already served.");
         }
+    }
+
+    // Coroutine to wait for a specified amount of time before deactivating the customer
+    private IEnumerator DisappearAfterSatisfaction(float delaySeconds)
+    {
+        yield return new WaitForSeconds(delaySeconds); // Wait for the specified delay
+        gameObject.SetActive(false); // Deactivate the customer GameObject
+    }
+
+    void OnCustomerSeated()
+    {
+        int orderIndex = OrderFood(); // Customer makes an order
+        OrderManager.Instance.PlaceOrder(orderIndex); // Communicate the order to the OrderManager
     }
 
     public void ResetAvailableFood()

@@ -123,6 +123,7 @@ public class PlayerController : MonoBehaviour
         carriedTray.transform.SetParent(null); // Unparent the tray from the player
         carriedTray.transform.position = tableSurfacePosition; // Position it on the table
         carriedTray.SetActive(true); // Make sure the tray is visible if you've disabled it before
+        carriedTray.GetComponent<Collider>().enabled = true;
         Debug.Log("Food placed on the table.");
 
         // Serve the order to the customer
@@ -139,6 +140,7 @@ public class PlayerController : MonoBehaviour
             {
                 Debug.Log("No assigned customer at table or no Table script attached to the table GameObject.");
             }
+
         }
 
         carriedTray = null; // Clear the reference to the tray since you've dropped it

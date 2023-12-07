@@ -8,6 +8,10 @@ TagManager:
   - Entrance
   - Table
   - Chef
+  - Ground
+  - Obstacle
+  - FoodTray
+  - Eyes
   layers:
   - Default
   - TransparentFX

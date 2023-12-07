@@ -7,6 +7,8 @@ public class CustomerManager : MonoBehaviour
     public GameObject[] customers; // Store all customers in an array
     public static List<GameObject> orderedFoods = new List<GameObject>();
     public int currentLevel = 1; // Start at level 1
+    public ChefBehavior chef;
+    public Transform kitchenPosition;
 
     void Start()
     {
@@ -74,4 +76,6 @@ public class CustomerManager : MonoBehaviour
         }
         return false;
     }
+
+
 }

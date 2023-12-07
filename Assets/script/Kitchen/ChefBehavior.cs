@@ -6,12 +6,12 @@ public class ChefBehavior : MonoBehaviour
 {
     private Animator chefAnimator;
     private bool playerIsNearChef = false; // This variable checks if the player is near the chef
+    
 
     private void Start()
     {
         chefAnimator = GetComponent<Animator>();
-        // You can still keep the automatic animation after 5 seconds if you want
-        Invoke("TriggerPickUpAnimation", 5f);
+
     }
 
     private void Update()
@@ -22,6 +22,7 @@ public class ChefBehavior : MonoBehaviour
             TurnChefRight();
         }
     }
+   
 
     public void TriggerPickUpAnimation()
     {
