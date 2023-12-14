@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class TriggerParticle : MonoBehaviour
 {
@@ -10,9 +11,15 @@ public class TriggerParticle : MonoBehaviour
     // This should be an array if you have multiple spawn locations, one for each table.
     public Transform[] spawnLocations; // Make sure this is an array if you have multiple tables.
 
+    public TextMeshProUGUI chefStatusText;
+
     private bool playerIsNearTable = false; // This variable checks if the player is near the table
     private bool isAwaitingOrder = false;
     private int currentOrderIndex = -1;
+    private void Start()
+    {
+        chefAnimator = GetComponent<Animator>();
+    }
     private void Update()
     {
         if (playerIsNearTable && Input.GetKeyDown(KeyCode.E))
@@ -63,12 +70,12 @@ public class TriggerParticle : MonoBehaviour
             return; // Exit the function to prevent the out of range error
         }
 
-        Debug.Log("Cooking order: " + (orderIndex + 1));
-
-        if (chefAnimator != null)
+        if (chefStatusText != null)
         {
-            chefAnimator.SetTrigger("pickUp"); // Confirm this trigger exists in the Animator
+            chefStatusText.text = "Cooking order: " + (orderIndex + 1);
         }
+
+       
 
         if (tableParticle != null)
         {
@@ -87,9 +94,10 @@ public class TriggerParticle : MonoBehaviour
 
     private IEnumerator CookingRoutine(int orderIndex)
     {
-        chefAnimator.SetTrigger("pickUp");
+        
         yield return new WaitForSeconds(30); // Wait for cooking time
         Instantiate(foodPrefabs[orderIndex], spawnLocations[0].position, Quaternion.identity);
+
     }
 
     private void OnTriggerEnter(Collider other)

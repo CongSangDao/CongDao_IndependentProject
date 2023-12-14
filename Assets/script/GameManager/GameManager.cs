@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using UnityEditor.Rendering.LookDev;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -13,7 +13,10 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI gameOverText;
     public TextMeshProUGUI satisfactionText;
     public TextMeshProUGUI unsatisfactionText;
-
+    //UI
+    public DebugUIManager debugUIManager;
+    public TextMeshProUGUI ordersText;
+    public TextMeshProUGUI chefStatusText;
     // Adding a queue to manage customer wait times
     public Queue<CustomerMovement> customerQueue = new Queue<CustomerMovement>();
 
@@ -25,17 +28,22 @@ public class GameManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else if (instance != this)
         {
             Destroy(gameObject);
         }
+
+
+    }
+    private void OnLevelWasLoaded(int level)
+    {
+        ResetGameState();
     }
 
     public void CustomerSatisfied(CustomerMovement customer)
     {
-        Debug.Log("Satisfied a customer. Unsatisfied count before: " + unsatisfiedCustomers );
         satisfiedCustomers++;
         UpdateSatisfactionUI();
         if (satisfiedCustomers >= requiredSatisfactionsForWin)
@@ -46,16 +54,15 @@ public class GameManager : MonoBehaviour
             unsatisfiedCustomers--;
 
         // Removing the customer from the queue once they are satisfied
-        
+        StartCoroutine(ClearDebugMessagesAfterDelay(5f));
     }
 
     public void CustomerBecameUnsatisfied(CustomerMovement customer)
     {
         unsatisfiedCustomers++;
-        Debug.Log("Unsatisfied customer count: " + unsatisfiedCustomers);
         UpdateSatisfactionUI();
         // Removing the unsatisfied customer from the queue
-
+        StartCoroutine(ClearDebugMessagesAfterDelay(5f));
 
         // Check for game over condition
         if (unsatisfiedCustomers >= maxUnsatisfiedCustomers)
@@ -68,28 +75,72 @@ public class GameManager : MonoBehaviour
     {
         satisfactionText.text = "Satisfaction: " + satisfiedCustomers;
         unsatisfactionText.text = "Unsatisfaction: " + unsatisfiedCustomers;
+
     }
 
-    private void GameOver()
+    public void GameOver()
     {
         Debug.Log("GameOver!");
-
-        // Show the game over text
-        gameOverText.gameObject.SetActive(true);
+        // Active the button
+       
+        SceneManager.LoadScene("Play Again");
 
         // Stop all movement
-        Time.timeScale = 0;
+        Time.timeScale = 1;
     }
 
-    private void GameWon()
+     void GameWon()
     {
         Debug.Log("GameWon!");
+        SceneManager.LoadScene("EndGame");
+    }
+   
+    public void QuitToMainMenu()
+    {
+        SceneManager.LoadScene("MainMenu"); 
+        Time.timeScale = 1;
+    }
 
-        // You can display a win message similar to the game over text
-        // Assuming you have a TextMeshProUGUI winText similar to gameOverText
-        
+    private IEnumerator ClearDebugMessagesAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+    }
 
-        // Stop all movement or end the level as per your game design
-        // Time.timeScale = 0; // Uncomment if you want to stop the game
+    public void ResetGameState()
+    {
+        // Reset all relevant game state variables
+        satisfiedCustomers = 0;
+        unsatisfiedCustomers = 0;
+        if (satisfactionText != null && unsatisfactionText != null)
+        {
+            UpdateSatisfactionUI();
+        }
+       
+    }
+    public void StartNewGame()
+    {
+        // Reset game state before loading the new scene
+        ResetGameState();
+
+        // Load the game scene
+        SceneManager.LoadScene("Restaurant view");
+    }
+
+    public void PlayAgain()
+    {
+        Debug.Log("Play Again button clicked. Loading RestaurantView...");
+        StartNewGame();
+    }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Find and set the references to your UI elements here
+
+        // Add any other UI elements you need to find after scene load
+
+        ResetGameState();
+    }
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 }

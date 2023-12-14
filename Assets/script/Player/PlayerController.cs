@@ -117,37 +117,28 @@ public class PlayerController : MonoBehaviour
 
     void DropFoodTrayOntoTable()
     {
-        // Your existing logic to check if the player can drop the food tray
-        // Here's where you actually place it on the table
         Vector3 tableSurfacePosition = GetTableSurfacePosition();
         carriedTray.transform.SetParent(null); // Unparent the tray from the player
         carriedTray.transform.position = tableSurfacePosition; // Position it on the table
-        carriedTray.SetActive(true); // Make sure the tray is visible if you've disabled it before
+        carriedTray.SetActive(true); // Make sure the tray is visible if disabled it before
         carriedTray.GetComponent<Collider>().enabled = true;
         Debug.Log("Food placed on the table.");
 
         // Serve the order to the customer
         if (currentTable != null)
         {
-            // Assuming each table knows which customer it's associated with
             Table tableScript = currentTable.GetComponent<Table>();
             if (tableScript != null && tableScript.assignedCustomer != null)
             {
                 // Call ServeOrder on the CustomerMovement script attached to the assigned customer
                 tableScript.assignedCustomer.ServeOrder(carriedTray);
             }
-            else
-            {
-                Debug.Log("No assigned customer at table or no Table script attached to the table GameObject.");
-            }
-
         }
 
         carriedTray = null; // Clear the reference to the tray since you've dropped it
     }
     bool IsPlayerAtTable()
     {
-        // Here you check if the player is close enough to a table to drop the food tray
         // The currentTable object should be assigned when the player is near a table
         return currentTable != null && Vector3.Distance(transform.position, currentTable.transform.position) <= tableDropRange;
     }

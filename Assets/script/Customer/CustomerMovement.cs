@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering;
 
 
 public class CustomerMovement : MonoBehaviour
@@ -33,9 +34,11 @@ public class CustomerMovement : MonoBehaviour
     private GameObject customerOrder;
     private bool isWaitingForOrder = false;
     private List<GameObject> availableFoodPrefabs = new List<GameObject>();
+    public DebugUIManager debugUIManager;
 
     private void Start()
     {
+        debugUIManager = FindObjectOfType<DebugUIManager>();
         agent = GetComponent<NavMeshAgent>();
         MoveToEntrance();
         customerRenderer = GetComponent<Renderer>();
@@ -54,6 +57,7 @@ public class CustomerMovement : MonoBehaviour
                 Debug.LogError("A food prefab is null in the array.");
             }
         }
+
     }
 
     private void Update()
@@ -169,6 +173,7 @@ public class CustomerMovement : MonoBehaviour
         Debug.Log(gameObject.name + " Ordered: " + orderedFood.name);
         isWaitingForOrder = true; // Customer has made an order and is waiting
         isServed = false;
+        debugUIManager.UpdateCustomerOrderUI(gameObject.name + " ordered: " + orderedFood.name);
     }
 
     public bool CheckOrder(GameObject deliveredFood)
@@ -210,8 +215,7 @@ public class CustomerMovement : MonoBehaviour
                 GameManager.instance.CustomerSatisfied(this); // Now the customer is satisfied
                 Debug.Log("Customer served with correct order: " + customerOrder.name);
 
-                // Start a coroutine to make the customer disappear after 30 seconds
-                StartCoroutine(DisappearAfterSatisfaction(30.0f)); // 30 seconds delay
+
             }
             else
             {
@@ -227,11 +231,7 @@ public class CustomerMovement : MonoBehaviour
     }
 
     // Coroutine to wait for a specified amount of time before deactivating the customer
-    private IEnumerator DisappearAfterSatisfaction(float delaySeconds)
-    {
-        yield return new WaitForSeconds(delaySeconds); // Wait for the specified delay
-        gameObject.SetActive(false); // Deactivate the customer GameObject
-    }
+   
 
     void OnCustomerSeated()
     {
@@ -247,4 +247,5 @@ public class CustomerMovement : MonoBehaviour
             availableFoodPrefabs.Add(foodPrefab);
         }
     }
+
 }
